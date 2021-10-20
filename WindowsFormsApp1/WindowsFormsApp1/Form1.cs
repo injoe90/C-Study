@@ -160,16 +160,33 @@ namespace WindowsFormsApp1
         // 검색한 경우와 그렇지 않은 경우를 구분
         private void ShowAllFile_DoubleClick(object sender, EventArgs e)
         {
-            string _whetherFile = showAllFile.SelectedItems[0].SubItems[2].Text;
-            string _selectedName = showAllFile.SelectedItems[0].Text;
-            string _makeFIlePath = Path.Combine(_saveFilePath, _selectedName);
-
-            if (isSearch) { return; }
-            else
+            try
             {
-                if (_whetherFile == "Directory") { ListViewInput(_makeFIlePath); _saveFilePath = _makeFIlePath; }
-                else { Process.Start(_makeFIlePath); }
+                string _whetherFile = showAllFile.SelectedItems[0].SubItems[2].Text;
+                string _selectedName = showAllFile.SelectedItems[0].Text;
+                string _makeFIlePath = Path.Combine(_saveFilePath, _selectedName);
+
+                if (isSearch) 
+                {
+                    
+                    if (_whetherFile == "Directory") 
+                    {
+                        ListViewInput(_saveSearchFilePath[_selectedName]); _saveFilePath = _saveSearchFilePath[_selectedName]; 
+                    }
+                    else
+                    {
+                        string _makeSearchFilePath = Path.Combine(_saveSearchFilePath[_selectedName], _selectedName);
+                        Process.Start(_makeSearchFilePath); 
+                    }
+                }
+                else
+                {
+                    if (_whetherFile == "Directory") { ListViewInput(_makeFIlePath); _saveFilePath = _makeFIlePath; }
+                    else { Process.Start(_makeFIlePath); }
+                }
             }
+            catch (Exception ex) { MessageBox.Show(ex.ToString()); }
+            
         }
 
         // 뒤로 가기
@@ -178,7 +195,7 @@ namespace WindowsFormsApp1
             int _findBackSlash = _saveFilePath.LastIndexOf("\\");
             string _backDirPath = _saveFilePath.Substring(0, _findBackSlash);
 
-            if (_findBackSlash >= 3) { ListViewInput(_backDirPath); _saveFilePath = _backDirPath; }
+            if (_findBackSlash >= 3) { ListViewInput(_backDirPath); _saveFilePath = _backDirPath; inputFilePath.Text = _backDirPath; }
             else { MessageBox.Show("더 이상 상위 디렉터리로 갈 수 없습니다."); }
         }
 
@@ -204,11 +221,16 @@ namespace WindowsFormsApp1
         // 검색 기능
         private void FileSearch_Click(object sender, EventArgs e)
         {
-            isSearch = true;
-            string _setDirRange = showDir.Text; string _serachName = searchFileName.Text;
-            DirectoryInfo dirRangeInfo = new DirectoryInfo(_setDirRange);
-            
-            showAllFile.Items.Clear(); RecursiveFindFile(dirRangeInfo, _serachName, _setDirRange);
+            try 
+            {
+                isSearch = true; _saveSearchFilePath = new Dictionary<string, string>();
+                string _setDirRange = showDir.Text; string _serachName = searchFileName.Text; _saveFilePath = _setDirRange;
+                DirectoryInfo dirRangeInfo = new DirectoryInfo(_setDirRange);
+
+                showAllFile.Items.Clear(); RecursiveFindFile(dirRangeInfo, _serachName, _setDirRange);
+            }
+            catch (UnauthorizedAccessException) { MessageBox.Show("접근 권한이 없습니다!"); }
+            catch (Exception ex) { MessageBox.Show(ex.ToString()); }
         }
 
         #endregion
